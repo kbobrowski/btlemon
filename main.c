@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <sys/signalfd.h>
 #include <signal.h>
+#include <time.h>
 
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 #define le16_to_cpu(val) (val)
@@ -82,7 +83,7 @@ void le_adv_report_evt(const void *data, uint8_t size) {
 report:
   rssi = (int8_t *) (evt->data + evt->data_len);
 
-  printf("%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X %d\n",
+  printf("%ld %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X %d\n", time(NULL),
       evt->addr[5], evt->addr[4], evt->addr[3],
       evt->addr[2], evt->addr[1], evt->addr[0],
       *rssi);
