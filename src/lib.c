@@ -1,3 +1,29 @@
+
+/*
+ *
+ *  This code is derived from BlueZ source code, with following
+ *  copyrights:
+ *
+ *  Copyright (C) 2011-2014  Intel Corporation
+ *  Copyright (C) 2002-2010  Marcel Holtmann <marcel@holtmann.org>
+ *
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
+
 #include <stdio.h>
 #include <stdint.h>
 #include <sys/epoll.h>
@@ -8,6 +34,7 @@
 #include <sys/signalfd.h>
 #include <signal.h>
 #include <time.h>
+#include <stdatomic.h>
 #include "btlemon.h"
 
 #if __BYTE_ORDER == __LITTLE_ENDIAN
@@ -64,7 +91,7 @@ static void print_callback(const uint8_t addr[6], const int8_t *rssi) {
 }
 
 static int epoll_fd;
-static int epoll_terminate;
+static atomic_int epoll_terminate;
 static struct loop_data bt_data;
 static struct loop_data sig_data;
 static btlemon_callback ble_callback = print_callback;
@@ -287,6 +314,10 @@ void btlemon_set_callback(btlemon_callback callback) {
   ble_callback = callback;
 }
 
+void btlemon_stop() {
+  epoll_terminate = 1;
+}
+
 int btlemon_run() {
   struct epoll_event events[MAX_EPOLL_EVENTS];
 
@@ -304,7 +335,7 @@ int btlemon_run() {
   while (!epoll_terminate) {
     int n, nfds;
 
-    nfds = epoll_wait(epoll_fd, events, MAX_EPOLL_EVENTS, -1);
+    nfds = epoll_wait(epoll_fd, events, MAX_EPOLL_EVENTS, 1000);
     if (nfds < 0)
       continue;
 
