@@ -8,6 +8,7 @@
 #include <sys/signalfd.h>
 #include <signal.h>
 #include <time.h>
+#include "btlemon.h"
 
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 #define le16_to_cpu(val) (val)
@@ -55,10 +56,18 @@ struct loop_data {
   callback_func callback;
 };
 
-int epoll_fd;
-int epoll_terminate;
-struct loop_data bt_data;
-struct loop_data sig_data;
+static void print_callback(const uint8_t addr[6], const int8_t *rssi) {
+  printf("%ld %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X %d\n", time(NULL),
+         addr[5], addr[4], addr[3],
+         addr[2], addr[1], addr[0],
+         *rssi);
+}
+
+static int epoll_fd;
+static int epoll_terminate;
+static struct loop_data bt_data;
+static struct loop_data sig_data;
+static btlemon_callback ble_callback = print_callback;
 
 struct mgmt_hdr {
   uint16_t opcode;
@@ -75,21 +84,15 @@ struct bt_hci_evt_le_adv_report {
   uint8_t  data[0];
 } __attribute__ ((packed));
 
-void le_adv_report_evt(const void *data, uint8_t size) {
+static void le_adv_report_evt(const void *data, uint8_t size) {
   const struct bt_hci_evt_le_adv_report *evt = data;
   uint8_t evt_len;
   int8_t *rssi;
 
-report:
+  report:
   rssi = (int8_t *) (evt->data + evt->data_len);
-
-  printf("%ld %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X %d\n", time(NULL),
-      evt->addr[5], evt->addr[4], evt->addr[3],
-      evt->addr[2], evt->addr[1], evt->addr[0],
-      *rssi);
-
+  ble_callback(evt->addr, rssi);
   evt_len = sizeof(*evt) + evt->data_len + 1;
-
   if (size > evt_len) {
     data += evt_len - 1;
     size -= evt_len - 1;
@@ -98,7 +101,7 @@ report:
   }
 }
 
-void le_meta_event_evt(const void *data, uint8_t size) {
+static void le_meta_event_evt(const void *data, uint8_t size) {
   uint8_t subevent = *((const uint8_t *) data);
   if (subevent == LE_ADVERTISING_REPORT_EVENT) {
 
@@ -111,7 +114,7 @@ void le_meta_event_evt(const void *data, uint8_t size) {
   }
 }
 
-void packet_hci_event(const void *data, uint8_t size) {
+static void packet_hci_event(const void *data, uint8_t size) {
   const hci_event_hdr *hci_hdr = data;
 
   data += HCI_EVENT_HDR_SIZE;
@@ -132,7 +135,7 @@ void packet_hci_event(const void *data, uint8_t size) {
   }
 }
 
-void sig_callback(int fd) {
+static void sig_callback(int fd) {
 
   ssize_t result;
   struct signalfd_siginfo si;
@@ -150,7 +153,7 @@ void sig_callback(int fd) {
   }
 }
 
-void data_callback(int fd) {
+static void data_callback(int fd) {
 
   unsigned char buf[BTSNOOP_MAX_PACKET_SIZE];
   unsigned char control[64];
@@ -194,7 +197,7 @@ void data_callback(int fd) {
   }
 }
 
-int connect_socket() {
+static int connect_socket() {
   int fd;
   struct sockaddr_hci addr;
 
@@ -218,7 +221,7 @@ int connect_socket() {
   return fd;
 }
 
-int add_bt_fd() {
+static int add_bt_fd() {
   int fd;
   struct epoll_event ev;
 
@@ -242,7 +245,7 @@ int add_bt_fd() {
   return fd;
 }
 
-int add_sig_fd() {
+static int add_sig_fd() {
   sigset_t mask;
   int fd;
   struct epoll_event ev;
@@ -275,12 +278,16 @@ int add_sig_fd() {
   return fd;
 }
 
-void remove_fd(struct loop_data *data) {
+static void remove_fd(struct loop_data *data) {
   epoll_ctl(epoll_fd, EPOLL_CTL_DEL, data->fd, NULL);
   close(data->fd);
 }
 
-int main() {
+void btlemon_set_callback(btlemon_callback callback) {
+  ble_callback = callback;
+}
+
+int btlemon_run() {
   struct epoll_event events[MAX_EPOLL_EVENTS];
 
   epoll_fd = epoll_create1(EPOLL_CLOEXEC);
