@@ -29,4 +29,11 @@ Can be integrated with another program using custom callback, check [examples/ex
 
 #### Compiling
 
-Requires Bluez, in particular ```bluetooth.h``` and ```hci.h``` headers and ```hcitool``` executable. On Ubuntu 18.04 these headers are packaged in ```libbluetooth-dev```.
+Requires Bluez, in particular ```bluetooth.h``` and ```hci.h``` headers. On Ubuntu 18.04 these headers are packaged in ```libbluetooth-dev```.
+
+```
+mkdir -p build
+cd build
+cmake ..
+make
+```
