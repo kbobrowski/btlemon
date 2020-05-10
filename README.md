@@ -6,14 +6,14 @@ This tool provides conveniently signal strength (RSSI) and address of BLE device
 
 Example usage:
 
-- execute ```sudo hcitool lescan --duplicates```
+- execute ```sudo btlemonrun```
+- in another shell execute ```sudo hcitool lescan --duplicates```
 - output from hcitool:
 ```
 40:16:3B:EB:7E:0B (unknown)
 51:1E:59:4C:46:C6 (unknown)
 51:1E:59:4C:46:C6 (unknown)
 ```
-- in another shell execute ```sudo btlemonrun```
 - example output from btlemon:
 ```
 1589153080 40:16:3B:EB:7E:0B -93
