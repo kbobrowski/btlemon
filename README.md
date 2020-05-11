@@ -27,9 +27,25 @@ Check [tools](tools) for convenient hcitool commands.
 
 Can be integrated with another program using custom callback, check [examples/example.c](examples/example.c).
 
+#### Python bindings
+
+```pybtlemon.so``` is compiled with CMake. Can be used as follows (remember to execute as root user, together with ```sudo hcitool lescan```):
+
+```python
+import pybtlemon
+
+
+def callback(addr, rssi):
+    print(f"addr: {addr}, distance: {10**((-60-rssi)/20):.2f}")
+
+
+pybtlemon.set_callback(callback)
+pybtlemon.run()
+```
+
 #### Compiling
 
-Requires Bluez, in particular ```bluetooth.h``` and ```hci.h``` headers. On Ubuntu 18.04 these headers are packaged in ```libbluetooth-dev```.
+Requires Bluez, in particular ```bluetooth.h``` and ```hci.h``` headers. On Ubuntu 18.04 these headers are packaged in ```libbluetooth-dev```. Python bindings require Python 3.
 
 ```
 mkdir -p build
