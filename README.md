@@ -2,7 +2,7 @@
 
 #### About
 
-This tool provides conveniently signal strength (RSSI) and address of BLE devices scanned with ```hcitool```.
+This tool provides address, signal strength (RSSI), and data of BLE devices scanned with ```hcitool```.
 
 Example usage:
 
@@ -10,15 +10,15 @@ Example usage:
 - in another shell execute ```sudo hcitool lescan --duplicates```
 - output from hcitool:
 ```
-40:16:3B:EB:7E:0B (unknown)
-51:1E:59:4C:46:C6 (unknown)
-51:1E:59:4C:46:C6 (unknown)
+40:40:51:17:2B:B1 (unknown)
+4E:AF:83:1E:D6:2F (unknown)
+4E:AF:83:1E:D6:2F (unknown)
 ```
 - example output from btlemon:
 ```
-1589153080 40:16:3B:EB:7E:0B -93
-1589153080 51:1E:59:4C:46:C6 -66
-1589153080 51:1E:59:4C:46:C6 -66
+1589219961 40:40:51:17:2B:B1 -87 
+1589219964 4E:AF:83:1E:D6:2F -54 0303AAFE1516AAFE00BFD7088787A44470A9FBD2000000000000
+1589219964 4E:AF:83:1E:D6:2F -54
 ```
 
 Check [tools](tools) for convenient hcitool commands.
@@ -32,7 +32,7 @@ Custom callback can be defined:
 #include <math.h>
 #include "btlemon.h"
 
-static void callback(const uint8_t addr[6], const int8_t *rssi) {
+static void callback(const uint8_t addr[6], const int8_t *rssi, const uint8_t *data, uint8_t data_len) {
   char addr_string[18];
   sprintf(addr_string, "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
           addr[5], addr[4], addr[3],
@@ -55,8 +55,8 @@ int main() {
 import pybtlemon
 
 
-def callback(addr, rssi):
-    print(f"addr: {addr}, distance: {10**((-60-rssi)/20):.2f}")
+def callback(addr, rssi, data):
+    print(f"addr: {addr}, distance: {10**((-60-rssi)/20):.2f}, data: {data}")
 
 
 pybtlemon.set_callback(callback)

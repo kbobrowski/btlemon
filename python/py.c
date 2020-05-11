@@ -25,14 +25,26 @@ static PyObject *set_callback(PyObject *self, PyObject *args) {
   return result;
 }
 
-static void c_callback(const uint8_t addr[6], const int8_t *rssi) {
+static void c_callback(const uint8_t addr[6], const int8_t *rssi, const uint8_t *data, uint8_t data_len) {
   char addr_string[18];
+  int i;
+  PyObject *arglist;
+  PyObject *pydata;
+  PyObject *result;
   sprintf(addr_string, "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
          addr[5], addr[4], addr[3],
          addr[2], addr[1], addr[0]);
-  PyObject *arglist;
-  PyObject *result;
-  arglist = Py_BuildValue("(s,i)", addr_string, *rssi);
+  arglist = PyTuple_New(3);
+  pydata = PyTuple_New(data_len);
+  PyObject *pyaddr = Py_BuildValue("s", addr_string);
+  PyObject *pyrssi = Py_BuildValue("i", *rssi);
+  PyTuple_SetItem(arglist, 0, pyaddr);
+  PyTuple_SetItem(arglist, 1, pyrssi);
+  for (i = 0; i < data_len; i++) {
+    PyObject *d = Py_BuildValue("i", data[i]);
+    PyTuple_SetItem(pydata, i, d);
+  }
+  PyTuple_SetItem(arglist, 2, pydata);
   result = PyObject_CallObject(py_callback, arglist);
   Py_DECREF(arglist);
   if (result == NULL) {

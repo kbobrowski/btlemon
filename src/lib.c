@@ -83,11 +83,16 @@ struct loop_data {
   callback_func callback;
 };
 
-static void print_callback(const uint8_t addr[6], const int8_t *rssi) {
-  printf("%ld %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X %d\n", time(NULL),
+static void print_callback(const uint8_t addr[6], const int8_t *rssi, const uint8_t *data, uint8_t data_len) {
+  int i;
+  printf("%ld %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X %d ", time(NULL),
          addr[5], addr[4], addr[3],
          addr[2], addr[1], addr[0],
          *rssi);
+  for (i=0; i<data_len; i++) {
+    printf("%2.2X", data[i]);
+  }
+  printf("\n");
 }
 
 static int epoll_fd;
@@ -118,7 +123,7 @@ static void le_adv_report_evt(const void *data, uint8_t size) {
 
   report:
   rssi = (int8_t *) (evt->data + evt->data_len);
-  ble_callback(evt->addr, rssi);
+  ble_callback(evt->addr, rssi, evt->data, evt->data_len);
   evt_len = sizeof(*evt) + evt->data_len + 1;
   if (size > evt_len) {
     data += evt_len - 1;

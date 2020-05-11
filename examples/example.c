@@ -2,7 +2,7 @@
 #include <math.h>
 #include "btlemon.h"
 
-static void callback(const uint8_t addr[6], const int8_t *rssi) {
+static void callback(const uint8_t addr[6], const int8_t *rssi, const uint8_t *data, uint8_t data_len) {
   char addr_string[18];
   sprintf(addr_string, "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
           addr[5], addr[4], addr[3],
