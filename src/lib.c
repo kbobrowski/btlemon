@@ -323,7 +323,7 @@ void btlemon_stop() {
   epoll_terminate = 1;
 }
 
-int btlemon_run() {
+int btlemon_run(int handle_signal) {
   struct epoll_event events[MAX_EPOLL_EVENTS];
 
   epoll_fd = epoll_create1(EPOLL_CLOEXEC);
@@ -333,7 +333,7 @@ int btlemon_run() {
     return -1;
   }
 
-  if (add_sig_fd() < 0) {
+  if (handle_signal && add_sig_fd() < 0) {
     return -1;
   }
 
@@ -351,7 +351,10 @@ int btlemon_run() {
   }
 
   remove_fd(&bt_data);
-  remove_fd(&sig_data);
+
+  if (handle_signal) {
+    remove_fd(&sig_data);
+  }
 
   return 0;
 }

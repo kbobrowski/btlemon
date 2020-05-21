@@ -58,7 +58,7 @@ static PyObject *run(PyObject *self, PyObject *args) {
   if (py_callback) {
     btlemon_set_callback(c_callback);
   }
-  if (btlemon_run() < 0) {
+  if (btlemon_run(0) < 0) {
     PyErr_SetString(PyExc_RuntimeError, "Error in btlemon execution, check output");
     return NULL;
   };

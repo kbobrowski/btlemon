@@ -13,5 +13,5 @@ static void callback(const uint8_t addr[6], const int8_t *rssi, const uint8_t *d
 
 int main() {
   btlemon_set_callback(callback);
-  return btlemon_run();
+  return btlemon_run(1);
 }
